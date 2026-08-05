@@ -1,0 +1,89 @@
+.root {
+  flex-grow: 1;
+}
+
+.glassCard {
+  background: rgba(30, 41, 59, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+.heroHeader {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  border-radius: 24px !important;
+  padding: 28px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4) !important;
+  margin-bottom: 30px !important;
+}
+
+.infoBadge {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+  text-align: center;
+}
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalPaper {
+  background: rgba(30, 41, 59, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 24px !important;
+  padding: 28px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+  max-width: 480px;
+  width: 100%;
+}
+
+.buyBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  padding: 12px 28px !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35) !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.buyBtn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.5) !important;
+}
+
+.chip {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #ffffff;
+}

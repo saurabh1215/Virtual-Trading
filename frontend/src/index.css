@@ -1,0 +1,165 @@
+:root {
+  --bg-dark: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --bg-card-hover: rgba(30, 41, 59, 0.9);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-glass-glow: rgba(99, 102, 241, 0.4);
+  
+  --primary-accent: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.25);
+  
+  --secondary-accent: #ec4899;
+  --emerald-profit: #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.2);
+  --rose-loss: #ef4444;
+  --rose-glow: rgba(239, 68, 68, 0.2);
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  
+  --font-heading: 'Outfit', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphic Utilities */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: var(--border-glass-glow);
+  transform: translateY(-2px);
+}
+
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Material UI Overrides for Dark Theme */
+html, body, #root {
+  background-color: #0f172a !important;
+}
+
+.MuiDrawer-docked {
+  background-color: #1e293b !important;
+}
+
+.MuiDrawer-paperAnchorLeft {
+  background-color: #1e293b !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.MuiDrawer-paper {
+  background-color: #1e293b !important;
+}
+
+.MuiPaper-root {
+  background-color: rgba(30, 41, 59, 0.85) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.MuiFormLabel-root {
+  color: #94a3b8 !important;
+}
+.MuiFormLabel-root.Mui-focused {
+  color: #818cf8 !important;
+}
+.MuiFormLabel-root.Mui-disabled {
+  color: #94a3b8 !important;
+}
+.MuiFormLabel-root.MuiInputLabel-shrink {
+  color: #818cf8 !important;
+  background-color: #1e293b !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+}
+
+.MuiOutlinedInput-root {
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  background-color: rgba(15, 23, 42, 0.5) !important;
+}
+
+.MuiInputBase-input {
+  color: #f8fafc !important;
+}
+.MuiInputBase-input.Mui-disabled {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+  font-weight: 500 !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #6366f1 !important;
+}
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+}
+.MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.MuiIconButton-root {
+  color: #94a3b8 !important;
+}
+.MuiTableCell-root {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0 !important;
+}
+.MuiTableCell-head {
+  color: #94a3b8 !important;
+  font-family: var(--font-heading) !important;
+  font-weight: 600 !important;
+}
+.MuiDialog-paper {
+  background: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 20px !important;
+}
+
