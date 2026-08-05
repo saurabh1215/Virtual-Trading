@@ -18,11 +18,11 @@ import News from "../News/News";
 import Search from "../Search/Search";
 import SettingsModal from "./SettingsModal";
 import Axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { SocketProvider } from "../../context/SocketContext";
 import LiveTickerBar from "../Ticker/LiveTickerBar";
 
 const drawerWidth = 260;
-
 
 const useStyles = makeStyles((theme) => ({
   appBarSpacer: theme.mixins.toolbar,
@@ -82,20 +82,31 @@ const PageTemplate = () => {
     history.push("/login");
   }
 
-  useEffect(() => {
-    const getPurchasedStocks = async () => {
-      const url = `/api/stock/${userData.user.id}`;
-      const headers = {
-        "x-auth-token": userData.token,
-      };
+  const userId = userData?.user?.id;
+  const token = userData?.token;
+
+  const { data: stocksQueryData } = useQuery(
+    ["purchasedStocks", userId],
+    async () => {
+      if (!userId || !token) return [];
+      const url = `/api/stock/${userId}`;
+      const headers = { "x-auth-token": token };
       const response = await Axios.get(url, { headers });
       if (response.data.status === "success") {
-        setPurchasedStocks(response.data.stocks);
+        return response.data.stocks;
       }
-    };
-    getPurchasedStocks();
-    // eslint-disable-next-line
-  }, []);
+      return [];
+    },
+    {
+      enabled: Boolean(userId && token),
+    }
+  );
+
+  useEffect(() => {
+    if (stocksQueryData) {
+      setPurchasedStocks(stocksQueryData);
+    }
+  }, [stocksQueryData]);
 
   const logout = () => {
     setUserData({

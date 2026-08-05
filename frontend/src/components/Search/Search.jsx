@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import UserContext from "../../context/UserContext";
 import { TextField, Container, Grid, Card, Typography, Box } from "@material-ui/core/";
+import Skeleton from "@material-ui/lab/Skeleton";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import LineChart from "../Template/LineChart";
 import BarChart from "./BarChart";
 import styles from "./Search.module.css";
 import Axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import InfoCard from "./InfoCard";
 import PriceCard from "./PriceCard";
 import PurchaseCard from "./PurchaseCard";
@@ -42,38 +44,48 @@ const BarChartCard = ({ sixMonthAverages, stockInfo }) => {
 const StockCard = ({ setPurchasedStocks, purchasedStocks, currentStock }) => {
   const { userData } = useContext(UserContext);
   const [selected, setSelected] = useState(false);
-  const [stockInfo, setStockInfo] = useState(undefined);
-  const [sixMonthAverages, setSixMonthAverages] = useState(undefined);
-  const [pastDay, setPastDay] = useState(undefined);
-  const [pastMonth, setPastMonth] = useState(undefined);
-  const [pastTwoYears, setPastTwoYears] = useState(undefined);
 
-  useEffect(() => {
-    const getInfo = async () => {
-      const url = `/api/data/prices/${currentStock.ticker}`;
+  const ticker = currentStock?.ticker;
+
+  const { data: stockInfo, isLoading: isInfoLoading } = useQuery(
+    ["stockInfo", ticker],
+    async () => {
+      if (!ticker) return null;
+      const url = `/api/data/prices/${ticker}`;
       const response = await Axios.get(url);
       if (response.data.status === "success") {
-        setStockInfo(response.data.data);
+        return response.data.data;
       }
-    };
+      return null;
+    },
+    { enabled: Boolean(ticker) }
+  );
 
-    getInfo();
-
-    const getData = async () => {
-      const url = `/api/data/prices/${currentStock.ticker}/full`;
+  const { data: fullData, isLoading: isFullLoading } = useQuery(
+    ["stockFullData", ticker],
+    async () => {
+      if (!ticker) return null;
+      const url = `/api/data/prices/${ticker}/full`;
       const response = await Axios.get(url);
       if (response.data.status === "success") {
-        setSixMonthAverages(response.data.sixMonthAverages);
-        setPastDay(response.data.pastDay);
-        setPastMonth(response.data.pastMonth);
-        setPastTwoYears(response.data.pastTwoYears);
+        return response.data;
       }
-    };
+      return null;
+    },
+    { enabled: Boolean(ticker) }
+  );
 
-    getData();
-     // eslint-disable-next-line
-  }, [currentStock]);
+  const pastDay = fullData?.pastDay;
+  const pastTwoYears = fullData?.pastTwoYears;
 
+  if (isInfoLoading || isFullLoading) {
+    return (
+      <Box p={3}>
+        <Skeleton variant="rect" height={100} style={{ borderRadius: "16px", backgroundColor: "rgba(255, 255, 255, 0.05)", marginBottom: "20px" }} />
+        <Skeleton variant="rect" height={360} style={{ borderRadius: "20px", backgroundColor: "rgba(255, 255, 255, 0.05)" }} />
+      </Box>
+    );
+  }
 
   return (
     <div>

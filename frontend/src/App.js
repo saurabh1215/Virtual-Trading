@@ -5,42 +5,37 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { Login, Register, NotFound, PageTemplate } from "./components";
 import UserContext from "./context/UserContext";
 import Axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 function App() {
-  const [userData, setUserData] = useState({ token: undefined, user: undefined, });
+  const [userData, setUserData] = useState({ token: undefined, user: undefined });
 
-  const url = "/api";
+  const { data: authData } = useQuery(
+    ["authUser"],
+    async () => {
+      let token = localStorage.getItem("auth-token");
+      if (!token) {
+        localStorage.setItem("auth-token", "");
+        return { token: undefined, user: undefined };
+      }
+      const headers = { "x-auth-token": token };
+      const tokenIsValid = await Axios.post("/api/auth/validate", null, { headers });
+      if (tokenIsValid.data) {
+        const userRes = await Axios.get("/api/auth/user", { headers });
+        return { token, user: userRes.data };
+      }
+      return { token: undefined, user: undefined };
+    },
+    {
+      staleTime: 1000 * 60 * 5,
+    }
+  );
 
   useEffect(() => {
-    const checkLoggedIn = async () => {
-      let token = localStorage.getItem("auth-token");
-      // important: if token is null, then set it to empty string.
-      if (token == null) {
-        localStorage.setItem("auth-token", "");
-        token = "";
-        setUserData({ token: undefined, user: undefined });
-        return;
-      }
-
-      const headers = {
-        "x-auth-token": token,
-      };
-
-      const tokenIsValid = await Axios.post(url + "/auth/validate", null, { headers,});
-
-      // tokenIsValid is either true or false ?????????????????? then .data ????
-
-      if (tokenIsValid.data) {
-        const userRes = await Axios.get(url + "/auth/user", { headers });
-        // userRes is returning json data of id, username, and balance
-        setUserData({ token, user: userRes.data, });
-      } else {
-        setUserData({ token: undefined, user: undefined });
-      }
-    }; 
-    checkLoggedIn();
-    // eslint-disable-next-line
-  }, []);
+    if (authData) {
+      setUserData(authData);
+    }
+  }, [authData]);
 
   return (
     <Router>

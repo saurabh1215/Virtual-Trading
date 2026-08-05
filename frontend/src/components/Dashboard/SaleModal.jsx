@@ -5,6 +5,7 @@ import { Typography, IconButton, Box, Button, TextField } from "@material-ui/cor
 import { motion } from "framer-motion";
 import CloseIcon from "@material-ui/icons/Close";
 import Axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const SaleModal = ({ setStart, stock }) => {
   return (
@@ -22,9 +23,10 @@ const SaleModal = ({ setStart, stock }) => {
 };
 
 const SaleModalContent = ({ setStart, stock }) => {
-  const { userData } = useContext(UserContext);
+  const { userData, setUserData } = useContext(UserContext);
   const [quantity, setQuantity] = useState(1);
   const price = Number(stock.currentPrice || stock.purchasePrice || 0);
+  const queryClient = useQueryClient();
 
   const handleQuantityChange = (e) => {
     const val = e.target.value;
@@ -33,26 +35,38 @@ const SaleModalContent = ({ setStart, stock }) => {
     }
   };
 
-  const sellStock = async (e) => {
+  const saleMutation = useMutation(
+    async (salePayload) => {
+      const headers = {
+        "x-auth-token": userData.token,
+      };
+      const url = `/api/stock`;
+      const response = await Axios.patch(url, salePayload, { headers });
+      return response.data;
+    },
+    {
+      onSuccess: (data) => {
+        if (data.status === "success") {
+          if (data.user) {
+            setUserData((prev) => ({ ...prev, user: data.user }));
+          }
+          queryClient.invalidateQueries(["purchasedStocks", userData.user.id]);
+          queryClient.invalidateQueries(["authUser"]);
+          setStart(false);
+        }
+      },
+    }
+  );
+
+  const sellStock = (e) => {
     e.preventDefault();
 
-    const headers = {
-      "x-auth-token": userData.token,
-    };
-    const data = {
+    saleMutation.mutate({
       stockId: stock.id,
       quantity: Number(quantity),
       userId: userData.user.id,
       price: price,
-    };
-
-    const url = `/api/stock`;
-    const response = await Axios.patch(url, data, { headers });
-
-    if (response.data.status === "success") {
-      setStart(false);
-      window.location.reload();
-    }
+    });
   };
 
   const totalRevenue = price * Number(quantity);

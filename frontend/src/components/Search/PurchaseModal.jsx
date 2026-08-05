@@ -5,6 +5,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import styles from "./Search.module.css";
 import { motion } from "framer-motion";
 import Axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const PurchaseModal = ({
   setSelected,
@@ -44,6 +45,7 @@ const PurchaseModalContent = ({
   const [quantity, setQuantity] = useState(1);
   const unitPrice = Number(pastDay ? pastDay.adjClose : 0);
   const [total, setTotal] = useState(unitPrice);
+  const queryClient = useQueryClient();
 
   const handleQuantityChange = (e) => {
     const val = e.target.value;
@@ -57,42 +59,37 @@ const PurchaseModalContent = ({
     }
   };
 
-  const handlePurchase = async (e) => {
+  const purchaseMutation = useMutation(
+    async (purchasePayload) => {
+      const headers = {
+        "x-auth-token": userData.token,
+      };
+      const url = "/api/stock";
+      const response = await Axios.post(url, purchasePayload, { headers });
+      return response.data;
+    },
+    {
+      onSuccess: (data) => {
+        if (data.status === "success") {
+          setUserData({
+            token: userData.token,
+            user: data.user,
+          });
+          queryClient.invalidateQueries(["purchasedStocks", userData.user.id]);
+          setSelected(false);
+        }
+      },
+    }
+  );
+
+  const handlePurchase = (e) => {
     e.preventDefault();
-
-    const headers = {
-      "x-auth-token": userData.token,
-    };
-
-    const purchase = {
+    purchaseMutation.mutate({
       userId: userData.user.id,
       ticker: stockInfo.ticker,
       quantity: Number(quantity),
       price: unitPrice,
-    };
-
-    const url = "/api/stock";
-    const response = await Axios.post(url, purchase, { headers });
-
-    if (response.data.status === "success") {
-      setUserData({
-        token: userData.token,
-        user: response.data.user,
-      });
-      setSelected(false);
-
-      const newStock = {
-        id: response.data.stockId,
-        ticker: stockInfo.ticker,
-        name: stockInfo.name,
-        purchasePrice: unitPrice,
-        purchaseDate: new Date(),
-        quantity: Number(quantity),
-        currentDate: new Date(),
-        currentPrice: unitPrice,
-      };
-      setPurchasedStocks([...purchasedStocks, newStock]);
-    }
+    });
   };
 
   const remainingBalance = userData.user.balance - total;
