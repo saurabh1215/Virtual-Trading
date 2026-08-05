@@ -1,93 +1,142 @@
+const mongoose = require("mongoose");
 const User = require("../models/userModel");
 const Stock = require("../models/stockModel");
 const data = require("../config/stocksData");
 const Axios = require("axios");
 
 exports.purchaseStock = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
     const { userId, ticker, quantity, price } = req.body;
 
     if (req.user !== userId) {
-      return res.status(200).json({ status: "fail",  message: "Credentials couldn't be validated.", });
+      return res.status(200).json({ status: "fail", message: "Credentials couldn't be validated." });
     }
 
-    const user = await User.findById(userId);
+    let resultUser;
+    let purchaseId;
+    let customError = null;
 
-    if (!user) {
-      return res.status(200).json({ status: "fail", message: "Credentials couldn't be validated.", });
-    }
+    await session.withTransaction(async () => {
+      const user = await User.findById(userId).session(session);
 
-    const totalPrice = quantity * price;
-    if (user.balance < totalPrice) {
-      return res.status(200).json({ status: "fail", message: `You don't have enough cash to purchase this stock.`, });
-    }
+      if (!user) {
+        customError = { status: 200, json: { status: "fail", message: "Credentials couldn't be validated." } };
+        return;
+      }
 
-    const purchase = new Stock({ userId, ticker, quantity, price });
-    await purchase.save();
-    const updatedUser = await User.findByIdAndUpdate(userId, {
-      balance: Math.round((user.balance - totalPrice + Number.EPSILON) * 100) / 100,
+      const totalPrice = quantity * price;
+      if (user.balance < totalPrice) {
+        customError = { status: 200, json: { status: "fail", message: `You don't have enough cash to purchase this stock.` } };
+        return;
+      }
+
+      const purchase = new Stock({ userId, ticker, quantity, price });
+      await purchase.save({ session });
+
+      const newBalance = Math.round((user.balance - totalPrice + Number.EPSILON) * 100) / 100;
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { balance: newBalance },
+        { session, new: true }
+      );
+
+      resultUser = updatedUser;
+      purchaseId = purchase._id;
     });
 
-    return res.status(200).json({ status: "success",  stockId: purchase._id,
+    if (customError) {
+      return res.status(customError.status).json(customError.json);
+    }
+
+    return res.status(200).json({
+      status: "success",
+      stockId: purchaseId,
       user: {
-        username: updatedUser.username,
-        id: updatedUser._id,
-        balance: Math.round((user.balance - totalPrice + Number.EPSILON) * 100) / 100,
+        username: resultUser.username,
+        id: resultUser._id,
+        balance: resultUser.balance,
       },
     });
   } catch (error) {
-    return res.status(200).json({ status: "fail",  message: "Something unexpected happened.", });
+    return res.status(200).json({ status: "fail", message: "Something unexpected happened." });
+  } finally {
+    await session.endSession();
   }
 };
 
+exports.buyStock = exports.purchaseStock;
+
 exports.sellStock = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
     const { userId, stockId, quantity, price } = req.body;
 
     if (req.user !== userId) {
-      return res.status(200).json({ status: "fail", message: "Credentials couldn't be validated.", });
+      return res.status(200).json({ status: "fail", message: "Credentials couldn't be validated." });
     }
 
-    const stock = await Stock.findById(stockId);
+    let resultUser;
+    let customError = null;
 
-    if (!stock) {
-      return res.status(200).json({ status: "fail", message: "Credentials couldn't be validated.", });
-    }
+    await session.withTransaction(async () => {
+      const stock = await Stock.findById(stockId).session(session);
 
-    const user = await User.findById(userId);
+      if (!stock) {
+        customError = { status: 200, json: { status: "fail", message: "Credentials couldn't be validated." } };
+        return;
+      }
 
-    if (!user) {
-      return res.status(200).json({ status: "fail",  message: "Credentials couldn't be validated.", });
-    }
+      const user = await User.findById(userId).session(session);
 
-    if (quantity > stock.quantity) {
-      return res.status(200).json({ status: "fail", message: "Invalid quantity.",  });
-    }
+      if (!user) {
+        customError = { status: 200, json: { status: "fail", message: "Credentials couldn't be validated." } };
+        return;
+      }
 
-    if (quantity === stock.quantity) {
-      await Stock.findByIdAndDelete(stockId);
-    } else {
-      await Stock.findByIdAndUpdate(stockId, {
-        quantity: stock.quantity - quantity,
-      });
-    }
+      if (quantity > stock.quantity) {
+        customError = { status: 200, json: { status: "fail", message: "Invalid quantity." } };
+        return;
+      }
 
-    const saleProfit = quantity * price;
+      if (quantity === stock.quantity) {
+        await Stock.findByIdAndDelete(stockId, { session });
+      } else {
+        await Stock.findByIdAndUpdate(
+          stockId,
+          { quantity: stock.quantity - quantity },
+          { session }
+        );
+      }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, {
-      balance: Math.round((user.balance + saleProfit + Number.EPSILON) * 100) / 100,
+      const saleProfit = quantity * price;
+      const newBalance = Math.round((user.balance + saleProfit + Number.EPSILON) * 100) / 100;
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { balance: newBalance },
+        { session, new: true }
+      );
+
+      resultUser = updatedUser;
     });
 
-    return res.status(200).json({  status: "success",
+    if (customError) {
+      return res.status(customError.status).json(customError.json);
+    }
+
+    return res.status(200).json({
+      status: "success",
       user: {
-        username: updatedUser.username,
-        id: updatedUser._id,
-        balance:
-          Math.round((user.balance + saleProfit + Number.EPSILON) * 100) / 100,
+        username: resultUser.username,
+        id: resultUser._id,
+        balance: resultUser.balance,
       },
     });
   } catch (error) {
-    return res.status(200).json({ status: "fail", message: "Something unexpected happened.", });
+    return res.status(200).json({ status: "fail", message: "Something unexpected happened." });
+  } finally {
+    await session.endSession();
   }
 };
 
