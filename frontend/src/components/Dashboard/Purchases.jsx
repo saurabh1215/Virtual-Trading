@@ -4,10 +4,12 @@ import SaleModal from "./SaleModal";
 import ShoppingCartTwoToneIcon from "@material-ui/icons/ShoppingCartTwoTone";
 import TrendingUpIcon from "@material-ui/icons/TrendingUp";
 import TrendingDownIcon from "@material-ui/icons/TrendingDown";
+import { useSocket } from "../../context/SocketContext";
 
 const Purchases = ({ purchasedStocks }) => {
   const [start, setStart] = useState(false);
   const [stock, setStock] = useState(undefined);
+  const { livePrices } = useSocket();
 
   const roundNumber = (num) => {
     return Math.round((num + Number.EPSILON) * 100) / 100;
@@ -26,7 +28,7 @@ const Purchases = ({ purchasedStocks }) => {
         </Typography>
 
         <Typography variant="caption" style={{ color: "#94a3b8" }}>
-          {purchasedStocks ? purchasedStocks.length : 0} Assets Owned
+          {purchasedStocks ? purchasedStocks.length : 0} Assets Owned • Real-time Live Market
         </Typography>
       </Box>
 
@@ -58,15 +60,18 @@ const Purchases = ({ purchasedStocks }) => {
             </TableHead>
             <TableBody>
               {purchasedStocks.map((row) => {
-                const currentP = Number(row.currentPrice || row.purchasePrice);
+                const liveTick = livePrices[row.ticker.toUpperCase()];
+                const currentP = liveTick && liveTick.price ? liveTick.price : Number(row.currentPrice || row.purchasePrice);
                 const purchaseP = Number(row.purchasePrice);
                 const difference = (currentP - purchaseP) / purchaseP;
                 const purchaseTotal = Number(row.quantity) * purchaseP;
                 const currentTotal = Number(row.quantity) * currentP;
                 const isGain = difference >= 0;
 
+                const flashClass = liveTick && liveTick.flash === "up" ? "flash-green" : liveTick && liveTick.flash === "down" ? "flash-red" : "";
+
                 return (
-                  <TableRow key={row.id} style={{ transition: "background 0.2s ease" }}>
+                  <TableRow key={row.id} className={flashClass} style={{ transition: "background 0.3s ease" }}>
                     <TableCell>
                       <div style={{
                         display: "inline-block", padding: "4px 10px", borderRadius: "8px",
@@ -88,7 +93,7 @@ const Purchases = ({ purchasedStocks }) => {
                     <TableCell align="right" style={{ color: "#cbd5e1" }}>
                       ${roundNumber(purchaseTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </TableCell>
-                    <TableCell align="right" style={{ fontWeight: 600, color: isGain ? "#34d399" : "#f87171" }}>
+                    <TableCell align="right" style={{ fontWeight: 700, color: isGain ? "#34d399" : "#f87171", fontFamily: "Outfit" }}>
                       ${currentP.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell align="right" style={{ fontWeight: 700, color: "#f8fafc" }}>
@@ -109,7 +114,7 @@ const Purchases = ({ purchasedStocks }) => {
                       <Button
                         size="small"
                         variant="outlined"
-                        onClick={() => openSaleModal(row)}
+                        onClick={() => openSaleModal({ ...row, currentPrice: currentP })}
                         style={{
                           borderColor: "rgba(239, 68, 68, 0.5)", color: "#f87171",
                           borderRadius: "8px", textTransform: "none", fontWeight: 600
@@ -125,6 +130,7 @@ const Purchases = ({ purchasedStocks }) => {
           </Table>
         </div>
       )}
+
       {start && stock && <SaleModal setStart={setStart} stock={stock} />}
     </React.Fragment>
   );

@@ -59,7 +59,14 @@ app.use(errorHandler); // if any error occurs in any route
 // ------------------production---------------
 
 
-// APP
-app.listen(port, () => {
+const http = require("http");
+const { initSocketServer } = require("./services/socketService");
+
+// APP & WEBSOCKET SETUP
+const server = http.createServer(app);
+initSocketServer(server);
+
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+

@@ -163,3 +163,58 @@ html, body, #root {
   border-radius: 20px !important;
 }
 
+/* Green & Red Price Flash Animations */
+@keyframes flashGreen {
+  0% {
+    background-color: rgba(16, 185, 129, 0.35) !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.6) !important;
+    border-color: #34d399 !important;
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes flashRed {
+  0% {
+    background-color: rgba(239, 68, 68, 0.35) !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+    border-color: #f87171 !important;
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.flash-green {
+  animation: flashGreen 0.8s ease-in-out forwards !important;
+}
+
+.flash-red {
+  animation: flashRed 0.8s ease-in-out forwards !important;
+}
+
+.ticker-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+

@@ -4,18 +4,24 @@ import AddIcon from "@material-ui/icons/Add";
 import CheckIcon from "@material-ui/icons/Check";
 import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
+import { useStockTick } from "../../context/SocketContext";
 
 const InfoCard = ({ stockInfo, pastDay, pastDataPeriod }) => {
   const [following, setFollowing] = useState(false);
+  const liveTick = useStockTick(stockInfo ? stockInfo.ticker : null);
 
-  const price = pastDay ? pastDay.adjClose : 0;
+  const basePrice = pastDay ? pastDay.adjClose : 0;
+  const price = liveTick && liveTick.price ? liveTick.price : basePrice;
+
   const prevPrice = pastDataPeriod && pastDataPeriod.length > 1
     ? pastDataPeriod[0].adjClose
     : pastDay ? pastDay.adjOpen : price;
 
   const diff = price - prevPrice;
-  const diffPercent = prevPrice > 0 ? (diff / prevPrice) * 100 : 0;
+  const diffPercent = prevPrice > 0 ? (diff / prevPrice) * 100 : (liveTick ? liveTick.changePercent : 0);
   const isPositive = diff >= 0;
+
+  const flashClass = liveTick && liveTick.flash === "up" ? "flash-green" : liveTick && liveTick.flash === "down" ? "flash-red" : "";
 
   const todayDateStr = pastDay && pastDay.date
     ? new Date(pastDay.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -55,20 +61,34 @@ const InfoCard = ({ stockInfo, pastDay, pastDataPeriod }) => {
 
       {/* Big Price & Percentage Pill */}
       <Box display="flex" flexWrap="wrap" alignItems="baseline" gap="14px">
-        <Typography variant="h2" style={{ fontFamily: "Outfit", fontWeight: 800, color: "#ffffff", letterSpacing: "-1px" }}>
-          {price ? price.toLocaleString('en-US', { minimumFractionDigits: 2 }) : "--"}
-        </Typography>
-        <Typography variant="h6" style={{ color: "#94a3b8", fontWeight: 600 }}>
-          USD
-        </Typography>
+        <div
+          className={flashClass}
+          style={{
+            display: "inline-flex",
+            alignItems: "baseline",
+            gap: "8px",
+            padding: "6px 16px",
+            borderRadius: "16px",
+            background: "rgba(30, 41, 59, 0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            transition: "all 0.3s ease",
+          }}
+        >
+          <Typography variant="h2" style={{ fontFamily: "Outfit", fontWeight: 800, color: "#ffffff", letterSpacing: "-1px" }}>
+            {price ? price.toLocaleString('en-US', { minimumFractionDigits: 2 }) : "--"}
+          </Typography>
+          <Typography variant="h6" style={{ color: "#94a3b8", fontWeight: 600 }}>
+            USD
+          </Typography>
+        </div>
 
         {/* Change Badge */}
         <div style={{
           display: "inline-flex",
           alignItems: "center",
           gap: "4px",
-          padding: "4px 12px",
-          borderRadius: "8px",
+          padding: "6px 14px",
+          borderRadius: "10px",
           background: isPositive ? "rgba(16, 185, 129, 0.18)" : "rgba(239, 68, 68, 0.18)",
           color: isPositive ? "#34d399" : "#f87171",
           fontWeight: 700,
@@ -84,13 +104,12 @@ const InfoCard = ({ stockInfo, pastDay, pastDataPeriod }) => {
       </Box>
 
       {/* Timestamp */}
-      <Typography variant="caption" style={{ color: "#64748b", display: "block", marginTop: "6px" }}>
-        {todayDateStr} • Real-time Market Data
+      <Typography variant="caption" style={{ color: "#64748b", display: "block", marginTop: "8px" }}>
+        {todayDateStr} • Live WebSocket Streaming {liveTick ? "🟢 Active" : "⚪ Standby"}
       </Typography>
     </div>
   );
 };
 
 export default InfoCard;
-
 

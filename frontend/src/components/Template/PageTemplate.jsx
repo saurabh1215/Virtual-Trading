@@ -18,8 +18,11 @@ import News from "../News/News";
 import Search from "../Search/Search";
 import SettingsModal from "./SettingsModal";
 import Axios from "axios";
+import { SocketProvider } from "../../context/SocketContext";
+import LiveTickerBar from "../Ticker/LiveTickerBar";
 
 const drawerWidth = 260;
+
 
 const useStyles = makeStyles((theme) => ({
   appBarSpacer: theme.mixins.toolbar,
@@ -116,87 +119,91 @@ const PageTemplate = () => {
   };
 
   return (
-    <div className={styles.root}>
-      <CssBaseline />
-      <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
-        <Toolbar className={styles.toolbar} style={{ justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="open drawer"
-              onClick={handleDrawerOpen}
-              className={clsx(styles.menuButton, open && styles.menuButtonHidden)}
-            >
-              <MenuIcon />
-            </IconButton>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{
-                width: "36px", height: "36px", borderRadius: "10px",
-                background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 0 12px rgba(99, 102, 241, 0.5)"
-              }}>
-                <ShowChartIcon style={{ color: "#ffffff" }} />
+    <SocketProvider>
+      <div className={styles.root}>
+        <CssBaseline />
+        <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
+          <Toolbar className={styles.toolbar} style={{ justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="open drawer"
+                onClick={handleDrawerOpen}
+                className={clsx(styles.menuButton, open && styles.menuButtonHidden)}
+              >
+                <MenuIcon />
+              </IconButton>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{
+                  width: "36px", height: "36px", borderRadius: "10px",
+                  background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 0 12px rgba(99, 102, 241, 0.5)"
+                }}>
+                  <ShowChartIcon style={{ color: "#ffffff" }} />
+                </div>
+                <Typography component="h1" variant="h6" noWrap style={{ fontFamily: "Outfit", fontWeight: 700, background: "linear-gradient(90deg, #f8fafc 0%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  {currentPage === "dashboard" && "Dashboard Overview"}
+                  {currentPage === "news" && "Market News & Insights"}
+                  {currentPage === "search" && "Stock Search & Trade"}
+                </Typography>
               </div>
-              <Typography component="h1" variant="h6" noWrap style={{ fontFamily: "Outfit", fontWeight: 700, background: "linear-gradient(90deg, #f8fafc 0%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                {currentPage === "dashboard" && "Dashboard Overview"}
-                {currentPage === "news" && "Market News & Insights"}
-                {currentPage === "search" && "Stock Search & Trade"}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              {userData.user && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  background: "rgba(30, 41, 59, 0.8)", border: "1px solid rgba(99, 102, 241, 0.3)",
+                  padding: "6px 14px", borderRadius: "20px", fontSize: "14px", fontWeight: 600, color: "#10b981"
+                }}>
+                  <AccountBalanceWalletIcon style={{ fontSize: "18px", color: "#10b981" }} />
+                  <span>${userData.user.balance ? userData.user.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : "0.00"}</span>
+                </div>
+              )}
+              <Typography variant="body2" style={{ color: "#94a3b8", fontWeight: 500 }}>
+                Welcome, <strong style={{ color: "#f8fafc" }}>{userData.user && userData.user.username ? userData.user.username.charAt(0).toUpperCase() + userData.user.username.slice(1) : ""}</strong>
               </Typography>
             </div>
-          </div>
+          </Toolbar>
+        </AppBar>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            {userData.user && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                background: "rgba(30, 41, 59, 0.8)", border: "1px solid rgba(99, 102, 241, 0.3)",
-                padding: "6px 14px", borderRadius: "20px", fontSize: "14px", fontWeight: 600, color: "#10b981"
-              }}>
-                <AccountBalanceWalletIcon style={{ fontSize: "18px", color: "#10b981" }} />
-                <span>${userData.user.balance ? userData.user.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : "0.00"}</span>
-              </div>
-            )}
-            <Typography variant="body2" style={{ color: "#94a3b8", fontWeight: 500 }}>
-              Welcome, <strong style={{ color: "#f8fafc" }}>{userData.user && userData.user.username ? userData.user.username.charAt(0).toUpperCase() + userData.user.username.slice(1) : ""}</strong>
+        <Drawer variant="permanent" classes={{ paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose) }} open={open}>
+          <div className={styles.toolbarIcon} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+            <Typography variant="subtitle1" style={{ fontFamily: "Outfit", fontWeight: 700, color: "#818cf8", letterSpacing: "0.5px" }}>
+              VIRTUAL TRADER
             </Typography>
+            <IconButton onClick={handleDrawerClose} style={{ color: "#94a3b8" }}>
+              <ChevronLeftIcon />
+            </IconButton>
           </div>
-        </Toolbar>
-      </AppBar>
+          <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.08)" }} />
+          <List>
+            <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+          </List>
+          <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", marginTop: "auto" }} />
+          <List>
+            <SecondNavbar logout={logout} openSettings={openSettings} />
+          </List>
+        </Drawer>
 
-      <Drawer variant="permanent" classes={{ paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose) }} open={open}>
-        <div className={styles.toolbarIcon} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
-          <Typography variant="subtitle1" style={{ fontFamily: "Outfit", fontWeight: 700, color: "#818cf8", letterSpacing: "0.5px" }}>
-            VIRTUAL TRADER
-          </Typography>
-          <IconButton onClick={handleDrawerClose} style={{ color: "#94a3b8" }}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </div>
-        <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.08)" }} />
-        <List>
-          <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-        </List>
-        <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", marginTop: "auto" }} />
-        <List>
-          <SecondNavbar logout={logout} openSettings={openSettings} />
-        </List>
-      </Drawer>
-
-      <main className={styles.content}>
-        <div className={classes.appBarSpacer} />
-        {currentPage === "dashboard" && (
-          <Dashboard purchasedStocks={purchasedStocks} />
-        )}
-        {currentPage === "news" && <News />}
-        {currentPage === "search" && (
-          <Search setPurchasedStocks={setPurchasedStocks} purchasedStocks={purchasedStocks} />
-        )}
-        {settingsOpen && <SettingsModal setSettingsOpen={setSettingsOpen} />}
-      </main>
-    </div>
+        <main className={styles.content}>
+          <div className={classes.appBarSpacer} />
+          <LiveTickerBar onSelectStock={(symbol) => setCurrentPage("search")} />
+          {currentPage === "dashboard" && (
+            <Dashboard purchasedStocks={purchasedStocks} />
+          )}
+          {currentPage === "news" && <News />}
+          {currentPage === "search" && (
+            <Search setPurchasedStocks={setPurchasedStocks} purchasedStocks={purchasedStocks} />
+          )}
+          {settingsOpen && <SettingsModal setSettingsOpen={setSettingsOpen} />}
+        </main>
+      </div>
+    </SocketProvider>
   );
+
 };
 
 export default PageTemplate;
